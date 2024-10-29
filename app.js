@@ -1,22 +1,21 @@
 const fs = require('fs');
 const express = require('express');
-// const cors = require('cors');
-const path = require('path'); // Import path for resolving file paths
+
+const path = require('path');
 const app = express();
 const port = 3000;
 
-// Middleware
-// app.use(cors());
-app.use(express.json()); // Parse JSON bodies
-app.use(express.static(path.join(__dirname, 'public'))); // Serve static files from 'public' directory
+
+app.use(express.json()); 
+app.use(express.static(path.join(__dirname, 'public'))); 
 
 const filePath = './data.json';
-const usernamesFilePath = './usernames.json'; // Path for storing usernames
+const usernamesFilePath = './usernames.json';
 
-// Load existing messages from data.json
+
 let messages = [];
 let lastMsgNum = 0;
-let usernames = new Set(); // Use a Set to keep track of usernames
+let usernames = new Set(); 
 
 const loadUsernames = () => {
     try {
@@ -40,9 +39,9 @@ const loadMessages = () => {
     try {
         const data = fs.readFileSync(filePath, 'utf-8');
         messages = JSON.parse(data);
-        lastMsgNum = messages.length ? messages[messages.length - 1].msgnum : 0; // Set lastMsgNum based on loaded messages
+        lastMsgNum = messages.length ? messages[messages.length - 1].msgnum : 0; 
 
-        // Populate the usernames set from messages
+
         messages.forEach(msg => {
             usernames.add(msg.username);
         });
@@ -53,16 +52,16 @@ const loadMessages = () => {
     }
 };
 
-// Load messages and usernames on server start
+
 loadUsernames();
 loadMessages();
 
-// Serve index.html on the root route
+
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html')); // Serve index.html
 });
 
-// Endpoint to send a message
+
 app.post('/send', (req, res) => {
     const { msg, username } = req.body;
 
@@ -71,7 +70,7 @@ app.post('/send', (req, res) => {
         const newMessage = { msgnum: lastMsgNum, username, msg };
         messages.push(newMessage); // Store message
 
-        // Write updated messages back to data.json
+
         fs.writeFileSync(filePath, JSON.stringify(messages, null, 2));
         
         res.sendStatus(200); // Send response
@@ -80,24 +79,24 @@ app.post('/send', (req, res) => {
     }
 });
 
-// Fetch messages from data.json based on the 'fromid'
+
 app.post('/getlatestmsg', (req, res) => {
     const { fromid } = req.body;
     lastMsgNum=0
     loadUsernames();
 loadMessages();
 
-    // Ensure fromid is a number
+
     if (typeof fromid !== 'number') {
         return res.status(400).json({ error: 'fromid must be a number' });
     }
 
-    // Filter new messages based on msgnum
+
     const newMessages = messages.filter(msg => msg.msgnum >= fromid);
     res.json(newMessages);
 });
 
-// Endpoint to change the username
+
 app.post('/setusername', (req, res) => {
     const { username } = req.body;
 
@@ -105,12 +104,12 @@ app.post('/setusername', (req, res) => {
         return res.status(400).json({ error: 'Username is required' });
     }
 
-    // Check for duplicate usernames
+
     if (usernames.has(username)) {
         return res.status(409).json({ error: 'Username already taken' });
     }
 
-    // If username is valid and not a duplicate, add it to the set
+
     usernames.add(username);
     saveUsernames(); // Save updated usernames to the file
     res.sendStatus(200); // Successfully changed username
