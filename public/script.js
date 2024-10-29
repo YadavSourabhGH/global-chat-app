@@ -5,7 +5,7 @@ async function setUsername() {
     const username = document.getElementById("usernameInput").value;
     if (username) {
         try {
-            const response = await fetch("http://localhost:3000/setusername", {
+            const response = await fetch("/setusername", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json"
@@ -67,7 +67,7 @@ async function sendMessage(event) {
     if (messageText.trim() === '') return; // Do not send empty messages
 
     try {
-        await fetch("http://localhost:3000/send", {
+        await fetch("/send", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
@@ -85,7 +85,7 @@ async function sendMessage(event) {
 // Fetch new messages from the server
 async function fetchMessages() {
     try {
-        const response = await fetch("http://localhost:3000/getlatestmsg", {
+        const response = await fetch("/getlatestmsg", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
