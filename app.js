@@ -1,17 +1,18 @@
 const fs = require('fs');
 const express = require('express');
-
+const cors = require('cors'); // Import cors
 const path = require('path');
 const app = express();
 const port = 3000;
 
+// Use CORS middleware
+app.use(cors());
 
 app.use(express.json()); 
 app.use(express.static(path.join(__dirname, 'public'))); 
 
 const filePath = './data.json';
 const usernamesFilePath = './usernames.json';
-
 
 let messages = [];
 let lastMsgNum = 0;
@@ -41,7 +42,6 @@ const loadMessages = () => {
         messages = JSON.parse(data);
         lastMsgNum = messages.length ? messages[messages.length - 1].msgnum : 0; 
 
-
         messages.forEach(msg => {
             usernames.add(msg.username);
         });
@@ -52,15 +52,12 @@ const loadMessages = () => {
     }
 };
 
-
 loadUsernames();
 loadMessages();
-
 
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html')); // Serve index.html
 });
-
 
 app.post('/send', (req, res) => {
     const { msg, username } = req.body;
@@ -70,7 +67,6 @@ app.post('/send', (req, res) => {
         const newMessage = { msgnum: lastMsgNum, username, msg };
         messages.push(newMessage); // Store message
 
-
         fs.writeFileSync(filePath, JSON.stringify(messages, null, 2));
         
         res.sendStatus(200); // Send response
@@ -79,23 +75,19 @@ app.post('/send', (req, res) => {
     }
 });
 
-
 app.post('/getlatestmsg', (req, res) => {
     const { fromid } = req.body;
-    lastMsgNum=0
+    lastMsgNum = 0;
     loadUsernames();
-loadMessages();
-
+    loadMessages();
 
     if (typeof fromid !== 'number') {
         return res.status(400).json({ error: 'fromid must be a number' });
     }
 
-
     const newMessages = messages.filter(msg => msg.msgnum >= fromid);
     res.json(newMessages);
 });
-
 
 app.post('/setusername', (req, res) => {
     const { username } = req.body;
@@ -104,11 +96,9 @@ app.post('/setusername', (req, res) => {
         return res.status(400).json({ error: 'Username is required' });
     }
 
-
     if (usernames.has(username)) {
         return res.status(409).json({ error: 'Username already taken' });
     }
-
 
     usernames.add(username);
     saveUsernames(); // Save updated usernames to the file
